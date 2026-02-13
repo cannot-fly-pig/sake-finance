@@ -1,0 +1,21 @@
+{
+  "name": "sake-finance-subgraph",
+  "version": "1.0.0",
+  "description": "Sake Finance V3 subgraph on Soneium (derived from Aave Protocol Subgraphs)",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/sake-finance-subgraph"
+  },
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy:studio": "graph deploy --studio sake-finance-soneium",
+    "test": "graph test"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.67.0",
+    "@graphprotocol/graph-ts": "^0.34.0",
+    "typescript": "^5.0.0"
+  }
+}

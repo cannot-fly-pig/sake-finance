@@ -1,0 +1,13 @@
+{
+  "soneium-mainnet": {
+    "network": "soneium-mainnet",
+    "chainId": 1868,
+    "pool": "0x3C3987A310ee13F7B8cBBe21D97D4436ba5E4B5f",
+    "poolAddressesProvider": "0x73a35ca19Da0357651296c40805c31585f19F741",
+    "oracle": "0x18530Af497F558e23134E223244F353ea776aF2A",
+    "poolDataProvider": "0x2BECa16DAa6Decf9C6F85eBA8F0B35696A3200b3",
+    "rewardsController": "0x76516A0Bee8c0908C85Fe7Ba085DF68b8732979e",
+    "wrappedNativeToken": "0xf24e57b1cb00d98C31F04f86328e22E8fcA457fb",
+    "startBlock": 0
+  }
+}

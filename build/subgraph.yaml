@@ -1,0 +1,313 @@
+specVersion: 1.0.0
+description: Sake Finance V3 Subgraph on Soneium
+schema:
+  file: schema.graphql
+indexerHints:
+  prune: never
+dataSources:
+  - kind: ethereum/contract
+    name: AaveOracle
+    network: soneium-mainnet
+    source:
+      address: "0x18530Af497F558e23134E223244F353ea776aF2A"
+      abi: AaveOracle
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: AaveOracle/AaveOracle.wasm
+      entities:
+        - PriceOracle
+        - PriceOracleAsset
+      abis:
+        - name: AaveOracle
+          file: AaveOracle/abis/AaveOracle.json
+        - name: GenericOracleI
+          file: AaveOracle/abis/GenericOracleI.json
+        - name: IExtendedPriceAggregator
+          file: AaveOracle/abis/IExtendedPriceAggregator.json
+      eventHandlers:
+        - event: AssetSourceUpdated(indexed address,indexed address)
+          handler: handleAssetSourceUpdated
+        - event: BaseCurrencySet(indexed address,uint256)
+          handler: handleBaseCurrencySet
+  - kind: ethereum/contract
+    name: PoolAddressesProvider
+    network: soneium-mainnet
+    source:
+      address: "0x73a35ca19Da0357651296c40805c31585f19F741"
+      abi: PoolAddressesProvider
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: PoolAddressesProvider/PoolAddressesProvider.wasm
+      entities:
+        - Pool
+        - Protocol
+        - ContractToPoolMapping
+      abis:
+        - name: PoolAddressesProvider
+          file: PoolAddressesProvider/abis/PoolAddressesProvider.json
+      eventHandlers:
+        - event: PoolUpdated(indexed address,indexed address)
+          handler: handlePoolUpdated
+        - event: PoolConfiguratorUpdated(indexed address,indexed address)
+          handler: handlePoolConfiguratorUpdated
+        - event: PriceOracleUpdated(indexed address,indexed address)
+          handler: handlePriceOracleUpdated
+        - event: ProxyCreated(indexed bytes32,indexed address,indexed address)
+          handler: handleProxyCreated
+  - kind: ethereum/contract
+    name: RewardsController
+    network: soneium-mainnet
+    source:
+      address: "0x76516A0Bee8c0908C85Fe7Ba085DF68b8732979e"
+      abi: RewardsController
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: RewardsController/RewardsController.wasm
+      entities:
+        - RewardsController
+        - Reward
+        - UserReward
+        - ClaimRewardsCall
+      abis:
+        - name: RewardsController
+          file: RewardsController/abis/RewardsController.json
+        - name: AToken
+          file: RewardsController/abis/AToken.json
+        - name: IERC20Detailed
+          file: RewardsController/abis/IERC20Detailed.json
+      eventHandlers:
+        - event: RewardsClaimed(indexed address,indexed address,indexed address,address,uint256)
+          handler: handleRewardsClaimed
+        - event: Accrued(indexed address,indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleAccrued
+        - event: AssetConfigUpdated(indexed address,indexed
+            address,uint256,uint256,uint256,uint256,uint256)
+          handler: handleAssetConfigUpdated
+templates:
+  - kind: ethereum/contract
+    name: Pool
+    network: soneium-mainnet
+    source:
+      abi: Pool
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: templates/Pool/Pool.wasm
+      entities:
+        - Reserve
+        - User
+        - UserReserve
+        - Supply
+        - Borrow
+        - Repay
+        - RedeemUnderlying
+        - LiquidationCall
+        - FlashLoan
+        - SwapBorrowRate
+        - UsageAsCollateral
+        - RebalanceStableBorrowRate
+        - UserEModeSet
+        - MintUnbacked
+        - BackUnbacked
+        - MintedToTreasury
+      abis:
+        - name: Pool
+          file: Pool/abis/Pool.json
+        - name: ERC20
+          file: Pool/abis/ERC20.json
+      eventHandlers:
+        - event: Supply(indexed address,address,indexed address,uint256,indexed uint16)
+          handler: handleSupply
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256)
+          handler: handleWithdraw
+        - event: Borrow(indexed address,address,indexed address,uint256,uint8,uint256,indexed
+            uint16)
+          handler: handleBorrow
+        - event: Repay(indexed address,indexed address,indexed address,uint256,bool)
+          handler: handleRepay
+        - event: LiquidationCall(indexed address,indexed address,indexed
+            address,uint256,uint256,address,bool)
+          handler: handleLiquidationCall
+        - event: FlashLoan(indexed address,address,indexed address,uint256,uint8,uint256,indexed
+            uint16)
+          handler: handleFlashLoan
+        - event: SwapBorrowRateMode(indexed address,indexed address,uint8)
+          handler: handleSwapBorrowRateMode
+        - event: ReserveUsedAsCollateralEnabled(indexed address,indexed address)
+          handler: handleReserveUsedAsCollateralEnabled
+        - event: ReserveUsedAsCollateralDisabled(indexed address,indexed address)
+          handler: handleReserveUsedAsCollateralDisabled
+        - event: RebalanceStableBorrowRate(indexed address,indexed address)
+          handler: handleRebalanceStableBorrowRate
+        - event: UserEModeSet(indexed address,uint8)
+          handler: handleUserEModeSet
+        - event: MintUnbacked(indexed address,address,indexed address,uint256,indexed uint16)
+          handler: handleMintUnbacked
+        - event: BackUnbacked(indexed address,indexed address,uint256,uint256)
+          handler: handleBackUnbacked
+        - event: IsolationModeTotalDebtUpdated(indexed address,uint256)
+          handler: handleIsolationModeTotalDebtUpdated
+        - event: MintedToTreasury(indexed address,uint256)
+          handler: handleMintedToTreasury
+        - event: ReserveDataUpdated(indexed address,uint256,uint256,uint256,uint256,uint256)
+          handler: handleReserveDataUpdated
+  - kind: ethereum/contract
+    name: PoolConfigurator
+    network: soneium-mainnet
+    source:
+      abi: PoolConfigurator
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: templates/PoolConfigurator/PoolConfigurator.wasm
+      entities:
+        - Reserve
+        - ReserveConfigurationHistoryItem
+        - ReserveParamsHistoryItem
+        - EModeCategory
+      abis:
+        - name: PoolConfigurator
+          file: PoolConfigurator/abis/PoolConfigurator.json
+        - name: Pool
+          file: PoolConfigurator/abis/Pool.json
+        - name: ERC20
+          file: PoolConfigurator/abis/ERC20.json
+        - name: ERC20Detailed
+          file: PoolConfigurator/abis/ERC20Detailed.json
+        - name: IERC20Detailed
+          file: PoolConfigurator/abis/IERC20Detailed.json
+        - name: IERC20DetailedBytes
+          file: PoolConfigurator/abis/IERC20DetailedBytes.json
+        - name: DefaultReserveInterestRateStrategy
+          file: PoolConfigurator/abis/DefaultReserveInterestRateStrategy.json
+        - name: DefaultReserveInterestRateStrategyV2
+          file: PoolConfigurator/abis/DefaultReserveInterestRateStrategyV2.json
+      eventHandlers:
+        - event: ReserveInitialized(indexed address,indexed address,address,address,address)
+          handler: handleReserveInitialized
+        - event: CollateralConfigurationChanged(indexed address,uint256,uint256,uint256)
+          handler: handleCollateralConfigurationChanged
+        - event: ReserveBorrowing(indexed address,bool)
+          handler: handleReserveBorrowing
+        - event: ReserveStableRateBorrowing(indexed address,bool)
+          handler: handleReserveStableRateBorrowing
+        - event: ReserveActive(indexed address,bool)
+          handler: handleReserveActive
+        - event: ReserveFrozen(indexed address,bool)
+          handler: handleReserveFrozen
+        - event: ReservePaused(indexed address,bool)
+          handler: handleReservePaused
+        - event: ReserveDropped(indexed address)
+          handler: handleReserveDropped
+        - event: ReserveFactorChanged(indexed address,uint256,uint256)
+          handler: handleReserveFactorChanged
+        - event: BorrowCapChanged(indexed address,uint256,uint256)
+          handler: handleBorrowCapChanged
+        - event: SupplyCapChanged(indexed address,uint256,uint256)
+          handler: handleSupplyCapChanged
+        - event: LiquidationProtocolFeeChanged(indexed address,uint256,uint256)
+          handler: handleLiquidationProtocolFeeChanged
+        - event: UnbackedMintCapChanged(indexed address,uint256,uint256)
+          handler: handleUnbackedMintCapChanged
+        - event: EModeAssetCategoryChanged(indexed address,uint8,uint8)
+          handler: handleEModeAssetCategoryChanged
+        - event: EModeCategoryAdded(indexed uint8,uint256,uint256,uint256,address,string)
+          handler: handleEModeCategoryAdded
+        - event: ReserveInterestRateStrategyChanged(indexed address,address,address)
+          handler: handleReserveInterestRateStrategyChanged
+        - event: DebtCeilingChanged(indexed address,uint256,uint256)
+          handler: handleDebtCeilingChanged
+        - event: SiloedBorrowingChanged(indexed address,bool,bool)
+          handler: handleSiloedBorrowingChanged
+        - event: BridgeProtocolFeeUpdated(uint256,uint256)
+          handler: handleBridgeProtocolFeeUpdated
+        - event: FlashloanPremiumTotalUpdated(uint128,uint128)
+          handler: handleFlashloanPremiumTotalUpdated
+        - event: FlashloanPremiumToProtocolUpdated(uint128,uint128)
+          handler: handleFlashloanPremiumToProtocolUpdated
+  - kind: ethereum/contract
+    name: AToken
+    network: soneium-mainnet
+    source:
+      abi: AToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: templates/AToken/AToken.wasm
+      entities:
+        - AToken
+        - UserReserve
+        - ATokenBalanceHistoryItem
+      abis:
+        - name: AToken
+          file: AToken/abis/AToken.json
+        - name: Pool
+          file: AToken/abis/Pool.json
+      eventHandlers:
+        - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleATokenMint
+        - event: Burn(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleATokenBurn
+        - event: BalanceTransfer(indexed address,indexed address,uint256,uint256)
+          handler: handleATokenTransfer
+  - kind: ethereum/contract
+    name: VariableDebtToken
+    network: soneium-mainnet
+    source:
+      abi: VariableDebtToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: templates/VariableDebtToken/VariableDebtToken.wasm
+      entities:
+        - VariableDebtToken
+        - UserReserve
+        - VTokenBalanceHistoryItem
+      abis:
+        - name: VariableDebtToken
+          file: VariableDebtToken/abis/VariableDebtToken.json
+        - name: Pool
+          file: VariableDebtToken/abis/Pool.json
+      eventHandlers:
+        - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleVariableDebtMint
+        - event: Burn(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleVariableDebtBurn
+  - kind: ethereum/contract
+    name: StableDebtToken
+    network: soneium-mainnet
+    source:
+      abi: StableDebtToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: templates/StableDebtToken/StableDebtToken.wasm
+      entities:
+        - StableDebtToken
+        - UserReserve
+        - STokenBalanceHistoryItem
+      abis:
+        - name: StableDebtToken
+          file: StableDebtToken/abis/StableDebtToken.json
+        - name: Pool
+          file: StableDebtToken/abis/Pool.json
+      eventHandlers:
+        - event: Mint(indexed address,indexed
+            address,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleStableDebtMint
+        - event: Burn(indexed address,uint256,uint256,uint256,uint256,uint256)
+          handler: handleStableDebtBurn
