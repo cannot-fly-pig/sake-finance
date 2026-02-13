@@ -12,8 +12,9 @@ import {
   Pool as PoolContract,
   PoolConfigurator as PoolConfiguratorContract,
 } from '../../generated/templates';
-import { createMapContractToPool, getOrInitPriceOracle } from '../helpers/initializers';
+import { createMapContractToPool, getOrInitPriceOracle, getProtocol } from '../helpers/initializers';
 import { ContractToPoolMapping, Pool } from '../../generated/schema';
+import { zeroBI } from '../utils/converters';
 
 let POOL_COMPONENTS = [
   'poolDataProvider',
@@ -37,8 +38,15 @@ function genericAddressProviderUpdate(
   let poolAddress = event.address.toHexString();
   let pool = Pool.load(poolAddress);
   if (pool == null) {
-    log.error('pool {} is not registered!', [poolAddress]);
-    throw new Error('pool' + poolAddress + 'is not registered!');
+    // Create Pool entity if it doesn't exist
+    pool = new Pool(poolAddress);
+    let protocol = getProtocol();
+    pool.protocol = protocol.id;
+    pool.active = true;
+    pool.paused = false;
+    pool.lastUpdateTimestamp = event.block.timestamp.toI32();
+    pool.addressProviderId = zeroBI();
+    log.warning('Creating new pool entity: {}', [poolAddress]);
   }
 
   pool.set(component, Value.fromAddress(newAddress));

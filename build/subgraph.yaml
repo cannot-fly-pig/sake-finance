@@ -7,7 +7,7 @@ indexerHints:
 dataSources:
   - kind: ethereum/contract
     name: AaveOracle
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x18530Af497F558e23134E223244F353ea776aF2A"
       abi: AaveOracle
@@ -22,11 +22,11 @@ dataSources:
         - PriceOracleAsset
       abis:
         - name: AaveOracle
-          file: AaveOracle/abis/AaveOracle.json
+          file: AaveOracle/AaveOracle.json
         - name: GenericOracleI
-          file: AaveOracle/abis/GenericOracleI.json
+          file: AaveOracle/GenericOracleI.json
         - name: IExtendedPriceAggregator
-          file: AaveOracle/abis/IExtendedPriceAggregator.json
+          file: AaveOracle/IExtendedPriceAggregator.json
       eventHandlers:
         - event: AssetSourceUpdated(indexed address,indexed address)
           handler: handleAssetSourceUpdated
@@ -34,7 +34,7 @@ dataSources:
           handler: handleBaseCurrencySet
   - kind: ethereum/contract
     name: PoolAddressesProvider
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x73a35ca19Da0357651296c40805c31585f19F741"
       abi: PoolAddressesProvider
@@ -50,7 +50,7 @@ dataSources:
         - ContractToPoolMapping
       abis:
         - name: PoolAddressesProvider
-          file: PoolAddressesProvider/abis/PoolAddressesProvider.json
+          file: PoolAddressesProvider/PoolAddressesProvider.json
       eventHandlers:
         - event: PoolUpdated(indexed address,indexed address)
           handler: handlePoolUpdated
@@ -62,7 +62,7 @@ dataSources:
           handler: handleProxyCreated
   - kind: ethereum/contract
     name: RewardsController
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x76516A0Bee8c0908C85Fe7Ba085DF68b8732979e"
       abi: RewardsController
@@ -79,11 +79,11 @@ dataSources:
         - ClaimRewardsCall
       abis:
         - name: RewardsController
-          file: RewardsController/abis/RewardsController.json
+          file: RewardsController/RewardsController.json
         - name: AToken
-          file: RewardsController/abis/AToken.json
+          file: RewardsController/AToken.json
         - name: IERC20Detailed
-          file: RewardsController/abis/IERC20Detailed.json
+          file: RewardsController/IERC20Detailed.json
       eventHandlers:
         - event: RewardsClaimed(indexed address,indexed address,indexed address,address,uint256)
           handler: handleRewardsClaimed
@@ -95,7 +95,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: Pool
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: Pool
     mapping:
@@ -122,9 +122,9 @@ templates:
         - MintedToTreasury
       abis:
         - name: Pool
-          file: Pool/abis/Pool.json
+          file: Pool/Pool.json
         - name: ERC20
-          file: Pool/abis/ERC20.json
+          file: Pool/ERC20.json
       eventHandlers:
         - event: Supply(indexed address,address,indexed address,uint256,indexed uint16)
           handler: handleSupply
@@ -163,7 +163,7 @@ templates:
           handler: handleReserveDataUpdated
   - kind: ethereum/contract
     name: PoolConfigurator
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: PoolConfigurator
     mapping:
@@ -178,21 +178,21 @@ templates:
         - EModeCategory
       abis:
         - name: PoolConfigurator
-          file: PoolConfigurator/abis/PoolConfigurator.json
+          file: PoolConfigurator/PoolConfigurator.json
         - name: Pool
-          file: PoolConfigurator/abis/Pool.json
+          file: PoolConfigurator/Pool.json
         - name: ERC20
-          file: PoolConfigurator/abis/ERC20.json
+          file: PoolConfigurator/ERC20.json
         - name: ERC20Detailed
-          file: PoolConfigurator/abis/ERC20Detailed.json
+          file: PoolConfigurator/ERC20Detailed.json
         - name: IERC20Detailed
-          file: PoolConfigurator/abis/IERC20Detailed.json
+          file: PoolConfigurator/IERC20Detailed.json
         - name: IERC20DetailedBytes
-          file: PoolConfigurator/abis/IERC20DetailedBytes.json
+          file: PoolConfigurator/IERC20DetailedBytes.json
         - name: DefaultReserveInterestRateStrategy
-          file: PoolConfigurator/abis/DefaultReserveInterestRateStrategy.json
+          file: PoolConfigurator/DefaultReserveInterestRateStrategy.json
         - name: DefaultReserveInterestRateStrategyV2
-          file: PoolConfigurator/abis/DefaultReserveInterestRateStrategyV2.json
+          file: PoolConfigurator/DefaultReserveInterestRateStrategyV2.json
       eventHandlers:
         - event: ReserveInitialized(indexed address,indexed address,address,address,address)
           handler: handleReserveInitialized
@@ -238,7 +238,7 @@ templates:
           handler: handleFlashloanPremiumToProtocolUpdated
   - kind: ethereum/contract
     name: AToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: AToken
     mapping:
@@ -252,9 +252,9 @@ templates:
         - ATokenBalanceHistoryItem
       abis:
         - name: AToken
-          file: AToken/abis/AToken.json
+          file: AToken/AToken.json
         - name: Pool
-          file: AToken/abis/Pool.json
+          file: AToken/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleATokenMint
@@ -264,7 +264,7 @@ templates:
           handler: handleATokenTransfer
   - kind: ethereum/contract
     name: VariableDebtToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: VariableDebtToken
     mapping:
@@ -278,9 +278,9 @@ templates:
         - VTokenBalanceHistoryItem
       abis:
         - name: VariableDebtToken
-          file: VariableDebtToken/abis/VariableDebtToken.json
+          file: VariableDebtToken/VariableDebtToken.json
         - name: Pool
-          file: VariableDebtToken/abis/Pool.json
+          file: VariableDebtToken/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleVariableDebtMint
@@ -288,7 +288,7 @@ templates:
           handler: handleVariableDebtBurn
   - kind: ethereum/contract
     name: StableDebtToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: StableDebtToken
     mapping:
@@ -302,9 +302,9 @@ templates:
         - STokenBalanceHistoryItem
       abis:
         - name: StableDebtToken
-          file: StableDebtToken/abis/StableDebtToken.json
+          file: StableDebtToken/StableDebtToken.json
         - name: Pool
-          file: StableDebtToken/abis/Pool.json
+          file: StableDebtToken/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed
             address,uint256,uint256,uint256,uint256,uint256,uint256)

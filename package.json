@@ -10,6 +10,9 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
+    "create:local": "graph create --node http://localhost:8020 sake-finance",
+    "remove:local": "graph remove --node http://localhost:8020 sake-finance",
+    "deploy:local": "graph deploy --node http://localhost:8020 --ipfs http://localhost:5001 sake-finance",
     "deploy:studio": "graph deploy --studio sake-finance-soneium",
     "test": "graph test"
   },

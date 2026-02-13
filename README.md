@@ -28,10 +28,28 @@ npm run codegen
 
 # Build subgraph
 npm run build
-
-# Deploy to The Graph Studio
-npm run deploy:studio
 ```
+
+## Deployment
+
+⚠️ **Note**: Soneium is not yet supported on The Graph Studio. You need to run a local Graph Node.
+
+### Quick Start - Local Deployment
+
+```bash
+# 1. Start Graph Node (requires Docker)
+docker-compose up -d
+
+# 2. Create subgraph instance
+npm run create:local
+
+# 3. Deploy
+npm run deploy:local
+
+# 4. Query at http://localhost:8000/subgraphs/name/sake-finance
+```
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Attribution
 

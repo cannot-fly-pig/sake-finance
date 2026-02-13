@@ -1,6 +1,6 @@
 {
-  "soneium-mainnet": {
-    "network": "soneium-mainnet",
+  "soneium": {
+    "network": "soneium",
     "chainId": 1868,
     "pool": "0x3C3987A310ee13F7B8cBBe21D97D4436ba5E4B5f",
     "poolAddressesProvider": "0x73a35ca19Da0357651296c40805c31585f19F741",

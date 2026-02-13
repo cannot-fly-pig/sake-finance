@@ -9,7 +9,7 @@ dataSources:
   # 1. AaveOracle - Price feeds
   - kind: ethereum/contract
     name: AaveOracle
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x18530Af497F558e23134E223244F353ea776aF2A"
       abi: AaveOracle
@@ -38,7 +38,7 @@ dataSources:
   # 2. PoolAddressesProvider - Entry point for protocol
   - kind: ethereum/contract
     name: PoolAddressesProvider
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x73a35ca19Da0357651296c40805c31585f19F741"
       abi: PoolAddressesProvider
@@ -68,7 +68,7 @@ dataSources:
   # 3. RewardsController - Incentives
   - kind: ethereum/contract
     name: RewardsController
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x76516A0Bee8c0908C85Fe7Ba085DF68b8732979e"
       abi: RewardsController
@@ -102,7 +102,7 @@ templates:
   # Pool template - Core lending events
   - kind: ethereum/contract
     name: Pool
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: Pool
     mapping:
@@ -169,7 +169,7 @@ templates:
   # PoolConfigurator template - Reserve configuration
   - kind: ethereum/contract
     name: PoolConfigurator
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: PoolConfigurator
     mapping:
@@ -246,7 +246,7 @@ templates:
   # AToken template - Interest-bearing deposits
   - kind: ethereum/contract
     name: AToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: AToken
     mapping:
@@ -274,7 +274,7 @@ templates:
   # VariableDebtToken template
   - kind: ethereum/contract
     name: VariableDebtToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: VariableDebtToken
     mapping:
@@ -300,7 +300,7 @@ templates:
   # StableDebtToken template
   - kind: ethereum/contract
     name: StableDebtToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: StableDebtToken
     mapping:
