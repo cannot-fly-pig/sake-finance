@@ -4,93 +4,19 @@ import {
   BorrowAllowanceDelegated as VBorrowAllowanceDelegated,
 } from '../../generated/templates/VariableDebtToken/VariableDebtToken';
 import {
-  VTokenBalanceHistoryItem,
   UserReserve,
-  Reserve,
   VariableTokenDelegatedAllowance,
 } from '../../generated/schema';
 import {
-  getOrInitReserve,
   getOrInitUserReserve,
   getOrInitSubToken,
   getOrInitUser,
-  getPriceOracleAsset,
-  getOrInitReserveParamsHistoryItem,
 } from '../helpers/initializers';
 import { zeroBI } from '../utils/converters';
-import { calculateUtilizationRate } from '../helpers/reserve-logic';
-import { Address, BigInt, ethereum } from '@graphprotocol/graph-ts';
 import { rayDiv, rayMul } from '../helpers/math';
-import { getHistoryEntityId } from '../utils/id-generation';
+import { Address } from '@graphprotocol/graph-ts';
 
-function saveUserReserveVHistory(
-  userReserve: UserReserve,
-  event: ethereum.Event,
-  index: BigInt
-): void {
-  let vTokenBalanceHistoryItem = new VTokenBalanceHistoryItem(
-    userReserve.id + event.transaction.hash.toHexString()
-  );
-
-  vTokenBalanceHistoryItem.scaledVariableDebt = userReserve.scaledVariableDebt;
-  vTokenBalanceHistoryItem.currentVariableDebt = userReserve.currentVariableDebt;
-  vTokenBalanceHistoryItem.userReserve = userReserve.id;
-  vTokenBalanceHistoryItem.index = index;
-  vTokenBalanceHistoryItem.timestamp = event.block.timestamp.toI32();
-  vTokenBalanceHistoryItem.save();
-}
-
-function saveReserve(reserve: Reserve, event: ethereum.Event): void {
-  // Optimization: utilizationRate is calculated in handleReserveDataUpdated
-  // reserve.utilizationRate = calculateUtilizationRate(reserve);
-  reserve.save();
-
-  let reserveParamsHistoryItem = getOrInitReserveParamsHistoryItem(
-    getHistoryEntityId(event),
-    reserve
-  );
-  reserveParamsHistoryItem.totalScaledVariableDebt = reserve.totalScaledVariableDebt;
-  reserveParamsHistoryItem.totalCurrentVariableDebt = reserve.totalCurrentVariableDebt;
-  reserveParamsHistoryItem.totalPrincipalStableDebt = reserve.totalPrincipalStableDebt;
-  reserveParamsHistoryItem.lifetimePrincipalStableDebt = reserve.lifetimePrincipalStableDebt;
-  reserveParamsHistoryItem.lifetimeScaledVariableDebt = reserve.lifetimeScaledVariableDebt;
-  reserveParamsHistoryItem.lifetimeCurrentVariableDebt = reserve.lifetimeCurrentVariableDebt;
-  reserveParamsHistoryItem.lifetimeLiquidity = reserve.lifetimeLiquidity;
-  reserveParamsHistoryItem.lifetimeBorrows = reserve.lifetimeBorrows;
-  reserveParamsHistoryItem.lifetimeRepayments = reserve.lifetimeRepayments;
-  reserveParamsHistoryItem.lifetimeWithdrawals = reserve.lifetimeWithdrawals;
-  reserveParamsHistoryItem.lifetimeLiquidated = reserve.lifetimeLiquidated;
-  reserveParamsHistoryItem.lifetimeFlashLoanPremium = reserve.lifetimeFlashLoanPremium;
-  reserveParamsHistoryItem.lifetimeFlashLoanLPPremium = reserve.lifetimeFlashLoanLPPremium;
-  reserveParamsHistoryItem.lifetimeFlashLoanProtocolPremium =
-    reserve.lifetimeFlashLoanProtocolPremium;
-  reserveParamsHistoryItem.lifetimeFlashLoans = reserve.lifetimeFlashLoans;
-  // reserveParamsHistoryItem.lifetimeStableDebFeeCollected = reserve.lifetimeStableDebFeeCollected;
-  // reserveParamsHistoryItem.lifetimeVariableDebtFeeCollected = reserve.lifetimeVariableDebtFeeCollected;
-  reserveParamsHistoryItem.lifetimeReserveFactorAccrued = reserve.lifetimeReserveFactorAccrued;
-  reserveParamsHistoryItem.lifetimeSuppliersInterestEarned =
-    reserve.lifetimeSuppliersInterestEarned;
-  reserveParamsHistoryItem.availableLiquidity = reserve.availableLiquidity;
-  reserveParamsHistoryItem.totalLiquidity = reserve.totalLiquidity;
-  reserveParamsHistoryItem.totalLiquidityAsCollateral = reserve.totalLiquidityAsCollateral;
-  reserveParamsHistoryItem.utilizationRate = reserve.utilizationRate;
-  reserveParamsHistoryItem.variableBorrowRate = reserve.variableBorrowRate;
-  reserveParamsHistoryItem.variableBorrowIndex = reserve.variableBorrowIndex;
-  reserveParamsHistoryItem.stableBorrowRate = reserve.stableBorrowRate;
-  reserveParamsHistoryItem.liquidityIndex = reserve.liquidityIndex;
-  reserveParamsHistoryItem.liquidityRate = reserve.liquidityRate;
-  reserveParamsHistoryItem.totalATokenSupply = reserve.totalATokenSupply;
-  reserveParamsHistoryItem.averageStableBorrowRate = reserve.averageStableRate;
-  reserveParamsHistoryItem.accruedToTreasury = reserve.accruedToTreasury;
-  let priceOracleAsset = getPriceOracleAsset(reserve.price);
-  reserveParamsHistoryItem.priceInEth = priceOracleAsset.priceInEth;
-
-  reserveParamsHistoryItem.priceInUsd = reserveParamsHistoryItem.priceInEth.toBigDecimal();
-
-  reserveParamsHistoryItem.timestamp = event.block.timestamp.toI32();
-  reserveParamsHistoryItem.save();
-}
-
+// Lightweight version: Only track borrowedReservesCount
 export function handleVariableDebtBurn(event: VTokenBurn): void {
   let vToken = getOrInitSubToken(event.address);
   let from = event.params.from;
@@ -99,7 +25,6 @@ export function handleVariableDebtBurn(event: VTokenBurn): void {
   const userBalanceChange = value.plus(balanceIncrease);
   let index = event.params.index;
   let userReserve = getOrInitUserReserve(from, vToken.underlyingAssetAddress, event);
-  let poolReserve = getOrInitReserve(vToken.underlyingAssetAddress, event);
 
   let calculatedAmount = rayDiv(userBalanceChange, index);
   userReserve.scaledVariableDebt = userReserve.scaledVariableDebt.minus(calculatedAmount);
@@ -108,22 +33,10 @@ export function handleVariableDebtBurn(event: VTokenBurn): void {
     userReserve.currentVariableDebt
   );
 
-  poolReserve.totalScaledVariableDebt = poolReserve.totalScaledVariableDebt.minus(calculatedAmount);
-  poolReserve.totalCurrentVariableDebt = rayMul(poolReserve.totalScaledVariableDebt, index);
-  // poolReserve.lifetimeVariableDebtFeeCollected = poolReserve.lifetimeVariableDebtFeeCollected.plus(
-  //  value.minus(calculatedAmount)
-  // );
-
-  poolReserve.availableLiquidity = poolReserve.availableLiquidity.plus(userBalanceChange);
-  poolReserve.lifetimeRepayments = poolReserve.lifetimeRepayments.plus(userBalanceChange);
-
-  userReserve.liquidityRate = poolReserve.liquidityRate;
-  userReserve.variableBorrowIndex = poolReserve.variableBorrowIndex;
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
 
-  saveReserve(poolReserve, event);
-
+  // Update borrowedReservesCount (KEY LOGIC)
   let user = getOrInitUser(from);
   if (
     userReserve.scaledVariableDebt.equals(zeroBI()) &&
@@ -132,14 +45,10 @@ export function handleVariableDebtBurn(event: VTokenBurn): void {
     user.borrowedReservesCount -= 1;
     user.save();
   }
-
-  // Optimization: Disable user balance history to reduce DB writes
-  // saveUserReserveVHistory(userReserve, event, index);
 }
 
 export function handleVariableDebtMint(event: VTokenMint): void {
   let vToken = getOrInitSubToken(event.address);
-  let poolReserve = getOrInitReserve(vToken.underlyingAssetAddress, event);
 
   let from = event.params.onBehalfOf;
   let value = event.params.value;
@@ -149,6 +58,7 @@ export function handleVariableDebtMint(event: VTokenMint): void {
 
   let userReserve = getOrInitUserReserve(from, vToken.underlyingAssetAddress, event);
 
+  // Update borrowedReservesCount (KEY LOGIC)
   let user = getOrInitUser(from);
   if (
     userReserve.scaledVariableDebt.equals(zeroBI()) &&
@@ -166,26 +76,8 @@ export function handleVariableDebtMint(event: VTokenMint): void {
     userReserve.currentVariableDebt
   );
 
-  userReserve.liquidityRate = poolReserve.liquidityRate;
-  userReserve.variableBorrowIndex = poolReserve.variableBorrowIndex;
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
-
-  poolReserve.totalScaledVariableDebt = poolReserve.totalScaledVariableDebt.plus(calculatedAmount);
-  poolReserve.totalCurrentVariableDebt = rayMul(poolReserve.totalScaledVariableDebt, index);
-
-  poolReserve.lifetimeScaledVariableDebt = poolReserve.lifetimeScaledVariableDebt.plus(
-    calculatedAmount
-  );
-  poolReserve.lifetimeCurrentVariableDebt = rayMul(poolReserve.lifetimeScaledVariableDebt, index);
-
-  poolReserve.availableLiquidity = poolReserve.availableLiquidity.minus(userBalanceChange);
-  poolReserve.lifetimeBorrows = poolReserve.lifetimeBorrows.plus(userBalanceChange);
-
-  saveReserve(poolReserve, event);
-
-  // Optimization: Disable user balance history
-  // saveUserReserveVHistory(userReserve, event, index);
 }
 
 export function handleVariableTokenBorrowAllowanceDelegated(
