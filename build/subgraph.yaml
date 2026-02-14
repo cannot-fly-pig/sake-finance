@@ -22,11 +22,11 @@ dataSources:
         - PriceOracleAsset
       abis:
         - name: AaveOracle
-          file: AaveOracle/AaveOracle.json
+          file: AaveOracle/abis/AaveOracle.json
         - name: GenericOracleI
-          file: AaveOracle/GenericOracleI.json
+          file: AaveOracle/abis/GenericOracleI.json
         - name: IExtendedPriceAggregator
-          file: AaveOracle/IExtendedPriceAggregator.json
+          file: AaveOracle/abis/IExtendedPriceAggregator.json
       eventHandlers:
         - event: AssetSourceUpdated(indexed address,indexed address)
           handler: handleAssetSourceUpdated
@@ -50,7 +50,7 @@ dataSources:
         - ContractToPoolMapping
       abis:
         - name: PoolAddressesProvider
-          file: PoolAddressesProvider/PoolAddressesProvider.json
+          file: PoolAddressesProvider/abis/PoolAddressesProvider.json
       eventHandlers:
         - event: PoolUpdated(indexed address,indexed address)
           handler: handlePoolUpdated
@@ -79,11 +79,11 @@ dataSources:
         - ClaimRewardsCall
       abis:
         - name: RewardsController
-          file: RewardsController/RewardsController.json
+          file: RewardsController/abis/RewardsController.json
         - name: AToken
-          file: RewardsController/AToken.json
+          file: RewardsController/abis/AToken.json
         - name: IERC20Detailed
-          file: RewardsController/IERC20Detailed.json
+          file: RewardsController/abis/IERC20Detailed.json
       eventHandlers:
         - event: RewardsClaimed(indexed address,indexed address,indexed address,address,uint256)
           handler: handleRewardsClaimed
@@ -122,9 +122,9 @@ templates:
         - MintedToTreasury
       abis:
         - name: Pool
-          file: Pool/Pool.json
+          file: Pool/abis/Pool.json
         - name: ERC20
-          file: Pool/ERC20.json
+          file: Pool/abis/ERC20.json
       eventHandlers:
         - event: Supply(indexed address,address,indexed address,uint256,indexed uint16)
           handler: handleSupply
@@ -178,21 +178,21 @@ templates:
         - EModeCategory
       abis:
         - name: PoolConfigurator
-          file: PoolConfigurator/PoolConfigurator.json
+          file: PoolConfigurator/abis/PoolConfigurator.json
         - name: Pool
-          file: PoolConfigurator/Pool.json
+          file: PoolConfigurator/abis/Pool.json
         - name: ERC20
-          file: PoolConfigurator/ERC20.json
+          file: PoolConfigurator/abis/ERC20.json
         - name: ERC20Detailed
-          file: PoolConfigurator/ERC20Detailed.json
+          file: PoolConfigurator/abis/ERC20Detailed.json
         - name: IERC20Detailed
-          file: PoolConfigurator/IERC20Detailed.json
+          file: PoolConfigurator/abis/IERC20Detailed.json
         - name: IERC20DetailedBytes
-          file: PoolConfigurator/IERC20DetailedBytes.json
+          file: PoolConfigurator/abis/IERC20DetailedBytes.json
         - name: DefaultReserveInterestRateStrategy
-          file: PoolConfigurator/DefaultReserveInterestRateStrategy.json
+          file: PoolConfigurator/abis/DefaultReserveInterestRateStrategy.json
         - name: DefaultReserveInterestRateStrategyV2
-          file: PoolConfigurator/DefaultReserveInterestRateStrategyV2.json
+          file: PoolConfigurator/abis/DefaultReserveInterestRateStrategyV2.json
       eventHandlers:
         - event: ReserveInitialized(indexed address,indexed address,address,address,address)
           handler: handleReserveInitialized
@@ -252,9 +252,9 @@ templates:
         - ATokenBalanceHistoryItem
       abis:
         - name: AToken
-          file: AToken/AToken.json
+          file: AToken/abis/AToken.json
         - name: Pool
-          file: AToken/Pool.json
+          file: AToken/abis/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleATokenMint
@@ -278,9 +278,9 @@ templates:
         - VTokenBalanceHistoryItem
       abis:
         - name: VariableDebtToken
-          file: VariableDebtToken/VariableDebtToken.json
+          file: VariableDebtToken/abis/VariableDebtToken.json
         - name: Pool
-          file: VariableDebtToken/Pool.json
+          file: VariableDebtToken/abis/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleVariableDebtMint
@@ -302,9 +302,9 @@ templates:
         - STokenBalanceHistoryItem
       abis:
         - name: StableDebtToken
-          file: StableDebtToken/StableDebtToken.json
+          file: StableDebtToken/abis/StableDebtToken.json
         - name: Pool
-          file: StableDebtToken/Pool.json
+          file: StableDebtToken/abis/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed
             address,uint256,uint256,uint256,uint256,uint256,uint256)

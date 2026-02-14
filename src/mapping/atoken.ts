@@ -234,7 +234,7 @@ export function handleATokenMint(event: ATokenMint): void {
   );
 }
 
-export function handleBalanceTransfer(event: BalanceTransfer): void {
+export function handleATokenTransfer(event: BalanceTransfer): void {
   let balanceTransferValue = event.params.value;
   const network = dataSource.network();
   const v301UpdateBlock = getUpdateBlock(network);

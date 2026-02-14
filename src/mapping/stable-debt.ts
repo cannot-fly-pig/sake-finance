@@ -87,7 +87,7 @@ function saveReserve(reserve: Reserve, event: ethereum.Event): void {
   reserveParamsHistoryItem.save();
 }
 
-export function handleStableTokenMint(event: STokenMint): void {
+export function handleStableDebtMint(event: STokenMint): void {
   let balanceChangeIncludingInterest = event.params.amount;
   let borrowedAmount = event.params.amount.minus(event.params.balanceIncrease);
   let sToken = getOrInitSubToken(event.address);
@@ -143,7 +143,7 @@ export function handleStableTokenMint(event: STokenMint): void {
   saveUserReserveSHistory(userReserve, event, event.params.avgStableRate);
 }
 
-export function handleStableTokenBurn(event: STokenBurn): void {
+export function handleStableDebtBurn(event: STokenBurn): void {
   let sTokenAddress = event.address;
   let sToken = getOrInitSubToken(sTokenAddress);
   let userReserve = getOrInitUserReserve(event.params.from, sToken.underlyingAssetAddress, event);

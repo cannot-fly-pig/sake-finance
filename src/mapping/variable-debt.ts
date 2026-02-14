@@ -90,7 +90,7 @@ function saveReserve(reserve: Reserve, event: ethereum.Event): void {
   reserveParamsHistoryItem.save();
 }
 
-export function handleVariableTokenBurn(event: VTokenBurn): void {
+export function handleVariableDebtBurn(event: VTokenBurn): void {
   let vToken = getOrInitSubToken(event.address);
   let from = event.params.from;
   let value = event.params.value;
@@ -135,7 +135,7 @@ export function handleVariableTokenBurn(event: VTokenBurn): void {
   saveUserReserveVHistory(userReserve, event, index);
 }
 
-export function handleVariableTokenMint(event: VTokenMint): void {
+export function handleVariableDebtMint(event: VTokenMint): void {
   let vToken = getOrInitSubToken(event.address);
   let poolReserve = getOrInitReserve(vToken.underlyingAssetAddress, event);
 
