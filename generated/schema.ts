@@ -889,6 +889,128 @@ export class PriceOracleAsset extends Entity {
   }
 }
 
+export class InterestRateStrategy extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save InterestRateStrategy entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type InterestRateStrategy must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("InterestRateStrategy", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): InterestRateStrategy | null {
+    return changetype<InterestRateStrategy | null>(
+      store.get_in_block("InterestRateStrategy", id),
+    );
+  }
+
+  static load(id: string): InterestRateStrategy | null {
+    return changetype<InterestRateStrategy | null>(
+      store.get("InterestRateStrategy", id),
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get baseVariableBorrowRate(): BigInt {
+    let value = this.get("baseVariableBorrowRate");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set baseVariableBorrowRate(value: BigInt) {
+    this.set("baseVariableBorrowRate", Value.fromBigInt(value));
+  }
+
+  get optimalUsageRatio(): BigInt {
+    let value = this.get("optimalUsageRatio");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set optimalUsageRatio(value: BigInt) {
+    this.set("optimalUsageRatio", Value.fromBigInt(value));
+  }
+
+  get variableRateSlope1(): BigInt {
+    let value = this.get("variableRateSlope1");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set variableRateSlope1(value: BigInt) {
+    this.set("variableRateSlope1", Value.fromBigInt(value));
+  }
+
+  get variableRateSlope2(): BigInt {
+    let value = this.get("variableRateSlope2");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set variableRateSlope2(value: BigInt) {
+    this.set("variableRateSlope2", Value.fromBigInt(value));
+  }
+
+  get stableRateSlope1(): BigInt {
+    let value = this.get("stableRateSlope1");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set stableRateSlope1(value: BigInt) {
+    this.set("stableRateSlope1", Value.fromBigInt(value));
+  }
+
+  get stableRateSlope2(): BigInt {
+    let value = this.get("stableRateSlope2");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set stableRateSlope2(value: BigInt) {
+    this.set("stableRateSlope2", Value.fromBigInt(value));
+  }
+}
+
 export class PriceOracle extends Entity {
   constructor(id: string) {
     super();

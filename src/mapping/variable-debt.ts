@@ -41,7 +41,8 @@ function saveUserReserveVHistory(
 }
 
 function saveReserve(reserve: Reserve, event: ethereum.Event): void {
-  reserve.utilizationRate = calculateUtilizationRate(reserve);
+  // Optimization: utilizationRate is calculated in handleReserveDataUpdated
+  // reserve.utilizationRate = calculateUtilizationRate(reserve);
   reserve.save();
 
   let reserveParamsHistoryItem = getOrInitReserveParamsHistoryItem(
@@ -132,7 +133,8 @@ export function handleVariableDebtBurn(event: VTokenBurn): void {
     user.save();
   }
 
-  saveUserReserveVHistory(userReserve, event, index);
+  // Optimization: Disable user balance history to reduce DB writes
+  // saveUserReserveVHistory(userReserve, event, index);
 }
 
 export function handleVariableDebtMint(event: VTokenMint): void {
@@ -182,7 +184,8 @@ export function handleVariableDebtMint(event: VTokenMint): void {
 
   saveReserve(poolReserve, event);
 
-  saveUserReserveVHistory(userReserve, event, index);
+  // Optimization: Disable user balance history
+  // saveUserReserveVHistory(userReserve, event, index);
 }
 
 export function handleVariableTokenBorrowAllowanceDelegated(

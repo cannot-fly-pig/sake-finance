@@ -13,7 +13,7 @@ dataSources:
     source:
       address: "0x18530Af497F558e23134E223244F353ea776aF2A"
       abi: AaveOracle
-      startBlock: 0
+      startBlock: 0  # Must start from 0 to catch initialization events
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -42,7 +42,7 @@ dataSources:
     source:
       address: "0x73a35ca19Da0357651296c40805c31585f19F741"
       abi: PoolAddressesProvider
-      startBlock: 0
+      startBlock: 0  # CRITICAL: Must start from 0 to catch ProxyCreated events (block 1,590,323)
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -72,7 +72,7 @@ dataSources:
     source:
       address: "0x76516A0Bee8c0908C85Fe7Ba085DF68b8732979e"
       abi: RewardsController
-      startBlock: 0
+      startBlock: 0  # Must start from 0 to catch initialization events
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

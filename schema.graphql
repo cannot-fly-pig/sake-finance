@@ -94,6 +94,17 @@ type PriceOracleAsset @entity(immutable: false) {
 }
 
 # TODO: should we change the naming of usdPriceEth to have generic market naming?
+# Interest Rate Strategy - Cached to avoid duplicate contract calls
+type InterestRateStrategy @entity(immutable: false) {
+  id: ID! # strategy contract address
+  baseVariableBorrowRate: BigInt!
+  optimalUsageRatio: BigInt!
+  variableRateSlope1: BigInt!
+  variableRateSlope2: BigInt!
+  stableRateSlope1: BigInt!
+  stableRateSlope2: BigInt!
+}
+
 type PriceOracle @entity(immutable: false) {
   id: ID!
   proxyPriceProvider: Bytes!

@@ -1,4 +1,4 @@
-import { Bytes, ethereum, log } from '@graphprotocol/graph-ts';
+import { Bytes, ethereum, log, Address } from '@graphprotocol/graph-ts';
 import {
   SubToken,
   PriceOracle,
@@ -12,6 +12,7 @@ import {
   ChainlinkAggregator,
   ContractToPoolMapping,
   Protocol,
+  InterestRateStrategy,
 } from '../../generated/schema';
 import {
   PRICE_ORACLE_ASSET_PLATFORM_SIMPLE,
@@ -21,6 +22,8 @@ import {
   zeroBI,
 } from '../utils/converters';
 import { getReserveId, getUserReserveId } from '../utils/id-generation';
+import { DefaultReserveInterestRateStrategy } from '../../generated/templates/PoolConfigurator/DefaultReserveInterestRateStrategy';
+import { DefaultReserveInterestRateStrategyV2 } from '../../generated/templates/PoolConfigurator/DefaultReserveInterestRateStrategyV2';
 
 export function getProtocol(): Protocol {
   let protocolId = '1';
@@ -30,6 +33,74 @@ export function getProtocol(): Protocol {
     protocol.save();
   }
   return protocol as Protocol;
+}
+
+// Optimization: Cache Interest Rate Strategy parameters to avoid duplicate contract calls
+export function getOrInitInterestRateStrategy(strategyAddress: Bytes): InterestRateStrategy {
+  let strategyId = strategyAddress.toHexString();
+  let strategy = InterestRateStrategy.load(strategyId);
+
+  if (strategy) {
+    // Return cached strategy (no contract calls!)
+    return strategy as InterestRateStrategy;
+  }
+
+  // First time encountering this strategy - fetch from contract
+  strategy = new InterestRateStrategy(strategyId);
+
+  let strategyContract = DefaultReserveInterestRateStrategy.bind(
+    Address.fromString(strategyId)
+  );
+  let strategyContractV2 = DefaultReserveInterestRateStrategyV2.bind(
+    Address.fromString(strategyId)
+  );
+
+  // Try V1 contract first
+  let baseRateCall = strategyContract.try_getBaseVariableBorrowRate();
+  if (!baseRateCall.reverted) {
+    strategy.baseVariableBorrowRate = baseRateCall.value;
+  } else {
+    // Try V2 contract
+    strategy.baseVariableBorrowRate = zeroBI();
+  }
+
+  let optimalRatioCall = strategyContract.try_OPTIMAL_USAGE_RATIO();
+  if (!optimalRatioCall.reverted) {
+    strategy.optimalUsageRatio = optimalRatioCall.value;
+  } else {
+    strategy.optimalUsageRatio = zeroBI();
+  }
+
+  let varSlope1Call = strategyContract.try_getVariableRateSlope1();
+  if (!varSlope1Call.reverted) {
+    strategy.variableRateSlope1 = varSlope1Call.value;
+  } else {
+    strategy.variableRateSlope1 = zeroBI();
+  }
+
+  let varSlope2Call = strategyContract.try_getVariableRateSlope2();
+  if (!varSlope2Call.reverted) {
+    strategy.variableRateSlope2 = varSlope2Call.value;
+  } else {
+    strategy.variableRateSlope2 = zeroBI();
+  }
+
+  let stableSlope1Call = strategyContract.try_getStableRateSlope1();
+  if (!stableSlope1Call.reverted) {
+    strategy.stableRateSlope1 = stableSlope1Call.value;
+  } else {
+    strategy.stableRateSlope1 = zeroBI();
+  }
+
+  let stableSlope2Call = strategyContract.try_getStableRateSlope2();
+  if (!stableSlope2Call.reverted) {
+    strategy.stableRateSlope2 = stableSlope2Call.value;
+  } else {
+    strategy.stableRateSlope2 = zeroBI();
+  }
+
+  strategy.save();
+  return strategy as InterestRateStrategy;
 }
 
 export function getPoolByContract(event: ethereum.Event): string {

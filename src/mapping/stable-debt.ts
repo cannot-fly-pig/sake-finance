@@ -38,7 +38,8 @@ function saveUserReserveSHistory(
 }
 
 function saveReserve(reserve: Reserve, event: ethereum.Event): void {
-  reserve.utilizationRate = calculateUtilizationRate(reserve);
+  // Optimization: utilizationRate is calculated in handleReserveDataUpdated
+  // reserve.utilizationRate = calculateUtilizationRate(reserve);
   reserve.save();
 
   let reserveParamsHistoryItem = getOrInitReserveParamsHistoryItem(
@@ -140,7 +141,8 @@ export function handleStableDebtMint(event: STokenMint): void {
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
 
-  saveUserReserveSHistory(userReserve, event, event.params.avgStableRate);
+  // Optimization: Disable user balance history to reduce DB writes
+  // saveUserReserveSHistory(userReserve, event, event.params.avgStableRate);
 }
 
 export function handleStableDebtBurn(event: STokenBurn): void {
@@ -194,7 +196,9 @@ export function handleStableDebtBurn(event: STokenBurn): void {
     user.borrowedReservesCount -= 1;
     user.save();
   }
-  saveUserReserveSHistory(userReserve, event, event.params.avgStableRate);
+
+  // Optimization: Disable user balance history
+  // saveUserReserveSHistory(userReserve, event, event.params.avgStableRate);
 }
 
 export function handleStableTokenBorrowAllowanceDelegated(event: SBorrowAllowanceDelegated): void {
