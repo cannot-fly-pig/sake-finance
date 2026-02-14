@@ -8,7 +8,7 @@ indexerHints:
 dataSources:
   - kind: ethereum/contract
     name: PoolAddressesProvider
-    network: soneium-mainnet
+    network: soneium
     source:
       address: "0x73a35ca19Da0357651296c40805c31585f19F741"
       abi: PoolAddressesProvider
@@ -22,14 +22,14 @@ dataSources:
         - Pool
       abis:
         - name: PoolAddressesProvider
-          file: PoolAddressesProvider/abis/PoolAddressesProvider.json
+          file: PoolAddressesProvider/PoolAddressesProvider.json
       eventHandlers:
         - event: ProxyCreated(indexed bytes32,indexed address,indexed address)
           handler: handleProxyCreated
 templates:
   - kind: ethereum/contract
     name: PoolConfigurator
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: PoolConfigurator
     mapping:
@@ -41,17 +41,17 @@ templates:
         - Reserve
       abis:
         - name: PoolConfigurator
-          file: PoolConfigurator/abis/PoolConfigurator.json
+          file: PoolConfigurator/PoolConfigurator.json
         - name: IERC20Detailed
-          file: PoolConfigurator/abis/IERC20Detailed.json
+          file: PoolConfigurator/IERC20Detailed.json
         - name: IERC20DetailedBytes
-          file: PoolConfigurator/abis/IERC20DetailedBytes.json
+          file: PoolConfigurator/IERC20DetailedBytes.json
       eventHandlers:
         - event: ReserveInitialized(indexed address,indexed address,address,address,address)
           handler: handleReserveInitialized
   - kind: ethereum/contract
     name: VariableDebtToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: VariableDebtToken
     mapping:
@@ -64,7 +64,7 @@ templates:
         - User
       abis:
         - name: VariableDebtToken
-          file: VariableDebtToken/abis/VariableDebtToken.json
+          file: VariableDebtToken/VariableDebtToken.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleVariableDebtMint
@@ -74,7 +74,7 @@ templates:
           handler: handleVariableTokenBorrowAllowanceDelegated
   - kind: ethereum/contract
     name: StableDebtToken
-    network: soneium-mainnet
+    network: soneium
     source:
       abi: StableDebtToken
     mapping:
@@ -87,7 +87,7 @@ templates:
         - User
       abis:
         - name: StableDebtToken
-          file: StableDebtToken/abis/StableDebtToken.json
+          file: StableDebtToken/StableDebtToken.json
       eventHandlers:
         - event: Mint(indexed address,indexed
             address,uint256,uint256,uint256,uint256,uint256,uint256)
