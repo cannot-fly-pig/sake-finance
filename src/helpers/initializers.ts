@@ -1,106 +1,88 @@
-import { Bytes, ethereum, log, Address } from '@graphprotocol/graph-ts';
+import { Address, Bytes, ethereum } from '@graphprotocol/graph-ts';
 import {
-  SubToken,
-  PriceOracle,
-  PriceOracleAsset,
+  ContractToPoolMapping,
+  Pool,
+  Protocol,
   Reserve,
+  SubToken,
   User,
   UserReserve,
-  ReserveParamsHistoryItem,
-  ReserveConfigurationHistoryItem,
-  Referrer,
-  ChainlinkAggregator,
-  ContractToPoolMapping,
-  Protocol,
-  InterestRateStrategy,
 } from '../../generated/schema';
-import {
-  PRICE_ORACLE_ASSET_PLATFORM_SIMPLE,
-  PRICE_ORACLE_ASSET_TYPE_SIMPLE,
-  zeroAddress,
-  zeroBD,
-  zeroBI,
-} from '../utils/converters';
-import { getReserveId, getUserReserveId } from '../utils/id-generation';
-import { DefaultReserveInterestRateStrategy } from '../../generated/templates/PoolConfigurator/DefaultReserveInterestRateStrategy';
-import { DefaultReserveInterestRateStrategyV2 } from '../../generated/templates/PoolConfigurator/DefaultReserveInterestRateStrategyV2';
+import { zeroAddress, zeroBI } from '../utils/converters';
 
-export function getProtocol(): Protocol {
-  let protocolId = '1';
-  let protocol = Protocol.load(protocolId);
-  if (protocol == null) {
-    protocol = new Protocol(protocolId);
-    protocol.save();
+// Lightweight version: Minimal initialization functions only
+
+export function getOrInitUser(address: Address): User {
+  let addressHex = address.toHexString();
+  let user = User.load(addressHex);
+  if (!user) {
+    user = new User(addressHex);
+    user.borrowedReservesCount = 0;
+    user.save();
   }
-  return protocol as Protocol;
+  return user as User;
 }
 
-// Optimization: Cache Interest Rate Strategy parameters to avoid duplicate contract calls
-export function getOrInitInterestRateStrategy(strategyAddress: Bytes): InterestRateStrategy {
-  let strategyId = strategyAddress.toHexString();
-  let strategy = InterestRateStrategy.load(strategyId);
+export function getOrInitUserReserve(
+  user: Address,
+  underlyingAsset: Bytes,
+  event: ethereum.Event
+): UserReserve {
+  let userReserveId = user.toHexString() + underlyingAsset.toHexString();
+  let userReserve = UserReserve.load(userReserveId);
+  if (!userReserve) {
+    userReserve = new UserReserve(userReserveId);
+    // Convert Bytes to Address for getOrInitReserve
+    let underlyingAssetAddress = Address.fromBytes(underlyingAsset);
+    let reserve = getOrInitReserve(underlyingAssetAddress, event);
+    userReserve.pool = reserve.pool;
+    userReserve.user = user.toHexString();
+    userReserve.reserve = reserve.id;
 
-  if (strategy) {
-    // Return cached strategy (no contract calls!)
-    return strategy as InterestRateStrategy;
+    userReserve.scaledVariableDebt = zeroBI();
+    userReserve.currentVariableDebt = zeroBI();
+    userReserve.principalStableDebt = zeroBI();
+    userReserve.currentStableDebt = zeroBI();
+    userReserve.currentTotalDebt = zeroBI();
+    userReserve.lastUpdateTimestamp = 0;
+
+    // Initialize user if not exists
+    getOrInitUser(user);
   }
+  return userReserve as UserReserve;
+}
 
-  // First time encountering this strategy - fetch from contract
-  strategy = new InterestRateStrategy(strategyId);
+export function getOrInitReserve(underlyingAsset: Address, event: ethereum.Event): Reserve {
+  let reserveId = underlyingAsset.toHexString();
+  let reserve = Reserve.load(reserveId);
+  if (!reserve) {
+    reserve = new Reserve(reserveId);
+    reserve.underlyingAsset = underlyingAsset;
+    reserve.pool = getPoolByContract(event);
+    reserve.symbol = '';
+    reserve.name = '';
+    reserve.decimals = 0;
+    reserve.isActive = false;
+    reserve.isFrozen = false;
 
-  let strategyContract = DefaultReserveInterestRateStrategy.bind(
-    Address.fromString(strategyId)
-  );
-  let strategyContractV2 = DefaultReserveInterestRateStrategyV2.bind(
-    Address.fromString(strategyId)
-  );
-
-  // Try V1 contract first
-  let baseRateCall = strategyContract.try_getBaseVariableBorrowRate();
-  if (!baseRateCall.reverted) {
-    strategy.baseVariableBorrowRate = baseRateCall.value;
-  } else {
-    // Try V2 contract
-    strategy.baseVariableBorrowRate = zeroBI();
+    // These will be set by handleReserveInitialized
+    reserve.aToken = zeroAddress().toHexString();
+    reserve.vToken = zeroAddress().toHexString();
   }
+  return reserve as Reserve;
+}
 
-  let optimalRatioCall = strategyContract.try_OPTIMAL_USAGE_RATIO();
-  if (!optimalRatioCall.reverted) {
-    strategy.optimalUsageRatio = optimalRatioCall.value;
-  } else {
-    strategy.optimalUsageRatio = zeroBI();
+export function getOrInitSubToken(address: Address): SubToken {
+  let subTokenId = address.toHexString();
+  let subToken = SubToken.load(subTokenId);
+  if (!subToken) {
+    subToken = new SubToken(subTokenId);
+    subToken.underlyingAssetAddress = zeroAddress();
+    subToken.pool = '';
+    subToken.underlyingAssetDecimals = 0;
+    subToken.tokenContractImpl = zeroAddress();
   }
-
-  let varSlope1Call = strategyContract.try_getVariableRateSlope1();
-  if (!varSlope1Call.reverted) {
-    strategy.variableRateSlope1 = varSlope1Call.value;
-  } else {
-    strategy.variableRateSlope1 = zeroBI();
-  }
-
-  let varSlope2Call = strategyContract.try_getVariableRateSlope2();
-  if (!varSlope2Call.reverted) {
-    strategy.variableRateSlope2 = varSlope2Call.value;
-  } else {
-    strategy.variableRateSlope2 = zeroBI();
-  }
-
-  let stableSlope1Call = strategyContract.try_getStableRateSlope1();
-  if (!stableSlope1Call.reverted) {
-    strategy.stableRateSlope1 = stableSlope1Call.value;
-  } else {
-    strategy.stableRateSlope1 = zeroBI();
-  }
-
-  let stableSlope2Call = strategyContract.try_getStableRateSlope2();
-  if (!stableSlope2Call.reverted) {
-    strategy.stableRateSlope2 = stableSlope2Call.value;
-  } else {
-    strategy.stableRateSlope2 = zeroBI();
-  }
-
-  strategy.save();
-  return strategy as InterestRateStrategy;
+  return subToken as SubToken;
 }
 
 export function getPoolByContract(event: ethereum.Event): string {
@@ -112,305 +94,35 @@ export function getPoolByContract(event: ethereum.Event): string {
   return contractToPoolMapping.pool;
 }
 
-export function getOrInitUser(address: Bytes): User {
-  let user = User.load(address.toHexString());
-  if (!user) {
-    user = new User(address.toHexString());
-    user.borrowedReservesCount = 0;
-    user.unclaimedRewards = zeroBI();
-    user.rewardsLastUpdated = 0;
-    user.lifetimeRewards = zeroBI();
-    user.save();
-  }
-  return user as User;
-}
-
-function initUserReserve(
-  underlyingAssetAddress: Bytes,
-  userAddress: Bytes,
-  poolId: string,
-  reserveId: string
-): UserReserve {
-  let userReserveId = getUserReserveId(userAddress, underlyingAssetAddress, poolId);
-  let userReserve = UserReserve.load(userReserveId);
-  if (userReserve === null) {
-    userReserve = new UserReserve(userReserveId);
-    userReserve.pool = poolId;
-    userReserve.usageAsCollateralEnabledOnUser = false;
-    userReserve.scaledATokenBalance = zeroBI();
-    userReserve.scaledVariableDebt = zeroBI();
-    userReserve.principalStableDebt = zeroBI();
-    userReserve.currentATokenBalance = zeroBI();
-    userReserve.currentVariableDebt = zeroBI();
-    userReserve.currentStableDebt = zeroBI();
-    userReserve.stableBorrowRate = zeroBI();
-    userReserve.oldStableBorrowRate = zeroBI();
-    userReserve.currentTotalDebt = zeroBI();
-    userReserve.variableBorrowIndex = zeroBI();
-    userReserve.lastUpdateTimestamp = 0;
-    userReserve.liquidityRate = zeroBI();
-    userReserve.stableBorrowLastUpdateTimestamp = 0;
-
-    let user = getOrInitUser(userAddress);
-    userReserve.user = user.id;
-
-    userReserve.reserve = reserveId;
-  }
-  return userReserve as UserReserve;
-}
-
-export function getOrInitUserReserveWithIds(
-  userAddress: Bytes,
-  underlyingAssetAddress: Bytes,
-  pool: string
-): UserReserve {
-  let reserveId = getReserveId(underlyingAssetAddress, pool);
-  return initUserReserve(underlyingAssetAddress, userAddress, pool, reserveId);
-}
-
-export function getOrInitPriceOracle(): PriceOracle {
-  let priceOracle = PriceOracle.load('1');
-  if (!priceOracle) {
-    priceOracle = new PriceOracle('1');
-    priceOracle.proxyPriceProvider = zeroAddress();
-    priceOracle.usdPriceEth = zeroBI();
-    priceOracle.usdPriceEthMainSource = zeroAddress();
-    priceOracle.usdPriceEthFallbackRequired = false;
-    priceOracle.fallbackPriceOracle = zeroAddress();
-    priceOracle.tokensWithFallback = [];
-    priceOracle.lastUpdateTimestamp = 0;
-    priceOracle.usdDependentAssets = [];
-    priceOracle.version = 1;
-    priceOracle.baseCurrency = zeroAddress();
-    priceOracle.baseCurrencyUnit = zeroBI();
-    priceOracle.save();
-  }
-  return priceOracle as PriceOracle;
-}
-
-export function getPriceOracleAsset(id: string, save: boolean = true): PriceOracleAsset {
-  let priceOracleReserve = PriceOracleAsset.load(id);
-  if (!priceOracleReserve && save) {
-    priceOracleReserve = new PriceOracleAsset(id);
-    priceOracleReserve.oracle = getOrInitPriceOracle().id;
-    priceOracleReserve.priceSource = zeroAddress();
-    priceOracleReserve.dependentAssets = [];
-    priceOracleReserve.type = PRICE_ORACLE_ASSET_TYPE_SIMPLE;
-    priceOracleReserve.platform = PRICE_ORACLE_ASSET_PLATFORM_SIMPLE;
-    priceOracleReserve.priceInEth = zeroBI();
-    priceOracleReserve.isFallbackRequired = false;
-    priceOracleReserve.lastUpdateTimestamp = 0;
-    priceOracleReserve.fromChainlinkSourcesRegistry = false;
-    priceOracleReserve.save();
-  }
-  return priceOracleReserve as PriceOracleAsset;
-}
-
-export function getOrInitReserve(underlyingAsset: Bytes, event: ethereum.Event): Reserve {
-  let poolId = getPoolByContract(event);
-  let reserveId = getReserveId(underlyingAsset, poolId);
-  let reserve = Reserve.load(reserveId);
-
-  if (reserve === null) {
-    reserve = new Reserve(reserveId);
-    reserve.underlyingAsset = underlyingAsset;
-    reserve.pool = poolId;
-    reserve.symbol = '';
-    reserve.name = '';
-    reserve.decimals = 0;
-    reserve.usageAsCollateralEnabled = false;
-    reserve.borrowingEnabled = false;
-    reserve.stableBorrowRateEnabled = false;
-    reserve.isActive = false;
-    reserve.isFrozen = false;
-    reserve.baseLTVasCollateral = zeroBI();
-    reserve.reserveLiquidationThreshold = zeroBI();
-    reserve.reserveLiquidationBonus = zeroBI();
-    reserve.reserveInterestRateStrategy = new Bytes(1);
-    reserve.baseVariableBorrowRate = zeroBI();
-    reserve.optimalUtilisationRate = zeroBI();
-    reserve.variableRateSlope1 = zeroBI();
-    reserve.variableRateSlope2 = zeroBI();
-    reserve.stableRateSlope1 = zeroBI();
-    reserve.stableRateSlope2 = zeroBI();
-    reserve.utilizationRate = zeroBD();
-    reserve.totalLiquidity = zeroBI();
-    reserve.totalATokenSupply = zeroBI();
-    reserve.totalLiquidityAsCollateral = zeroBI();
-    reserve.availableLiquidity = zeroBI();
-    reserve.liquidityRate = zeroBI();
-    reserve.variableBorrowRate = zeroBI();
-    reserve.stableBorrowRate = zeroBI();
-    reserve.averageStableRate = zeroBI(); // TODO: where do i get this?
-    reserve.liquidityIndex = zeroBI();
-    reserve.variableBorrowIndex = zeroBI();
-    reserve.reserveFactor = zeroBI(); // TODO: is default 0?
-    reserve.aToken = zeroAddress().toHexString();
-    reserve.vToken = zeroAddress().toHexString();
-    reserve.sToken = zeroAddress().toHexString();
-
-    reserve.totalScaledVariableDebt = zeroBI();
-    reserve.totalCurrentVariableDebt = zeroBI();
-    reserve.totalPrincipalStableDebt = zeroBI();
-    reserve.totalSupplies = zeroBI();
-    reserve.accruedToTreasury = zeroBI();
-
-    reserve.isPaused = false;
-    reserve.isDropped = false;
-    reserve.siloedBorrowing = false;
-
-    reserve.lifetimePrincipalStableDebt = zeroBI();
-    reserve.lifetimeScaledVariableDebt = zeroBI();
-    reserve.lifetimeCurrentVariableDebt = zeroBI();
-
-    reserve.lifetimeLiquidity = zeroBI();
-    reserve.lifetimeBorrows = zeroBI();
-    reserve.lifetimeRepayments = zeroBI();
-    reserve.lifetimeWithdrawals = zeroBI();
-    reserve.lifetimeLiquidated = zeroBI();
-    reserve.lifetimeFlashLoans = zeroBI();
-    reserve.lifetimeFlashLoanPremium = zeroBI();
-    reserve.lifetimeFlashLoanLPPremium = zeroBI();
-    reserve.lifetimeFlashLoanProtocolPremium = zeroBI();
-
-    reserve.stableDebtLastUpdateTimestamp = 0;
-    reserve.lastUpdateTimestamp = 0;
-
-    reserve.lifetimeReserveFactorAccrued = zeroBI();
-    reserve.lifetimeSuppliersInterestEarned = zeroBI();
-    // reserve.lifetimeStableDebFeeCollected = zeroBI();
-    // reserve.lifetimeVariableDebtFeeCollected = zeroBI();
-
-    reserve.lifetimePortalLPFee = zeroBI();
-    reserve.lifetimePortalProtocolFee = zeroBI();
-
-    let priceOracleAsset = getPriceOracleAsset(underlyingAsset.toHexString());
-    if (!priceOracleAsset.lastUpdateTimestamp) {
-      priceOracleAsset.save();
-    }
-    reserve.price = priceOracleAsset.id;
-    // TODO: think about AToken
-  }
-  return reserve as Reserve;
-}
-
-export function getOrInitUserReserve(
-  _user: Bytes,
-  _underlyingAsset: Bytes,
-  event: ethereum.Event
-): UserReserve {
-  let poolId = getPoolByContract(event);
-  let reserve = getOrInitReserve(_underlyingAsset, event);
-  return initUserReserve(_underlyingAsset, _user, poolId, reserve.id);
-}
-
-export function getChainlinkAggregator(id: string): ChainlinkAggregator {
-  let chainlinkAggregator = ChainlinkAggregator.load(id);
-  if (!chainlinkAggregator) {
-    chainlinkAggregator = new ChainlinkAggregator(id);
-    chainlinkAggregator.oracleAsset = '';
-  }
-  return chainlinkAggregator as ChainlinkAggregator;
-}
-
-export function getOrInitSubToken(subTokenAddress: Bytes): SubToken {
-  let sTokenId = subTokenAddress.toHexString();
-  let sToken = SubToken.load(sTokenId);
-  if (!sToken) {
-    sToken = new SubToken(sTokenId);
-    sToken.underlyingAssetAddress = new Bytes(1);
-    sToken.pool = '';
-    sToken.underlyingAssetDecimals = 18;
-  }
-  return sToken as SubToken;
-}
-
-export function getOrInitReserveParamsHistoryItem(
-  id: string,
-  reserve: Reserve
-): ReserveParamsHistoryItem {
-  let reserveParamsHistoryItem = ReserveParamsHistoryItem.load(id);
-  if (!reserveParamsHistoryItem) {
-    reserveParamsHistoryItem = new ReserveParamsHistoryItem(id);
-    reserveParamsHistoryItem.variableBorrowRate = zeroBI();
-    reserveParamsHistoryItem.variableBorrowIndex = zeroBI();
-    reserveParamsHistoryItem.utilizationRate = zeroBD();
-    reserveParamsHistoryItem.stableBorrowRate = zeroBI();
-    reserveParamsHistoryItem.averageStableBorrowRate = zeroBI();
-    reserveParamsHistoryItem.liquidityIndex = zeroBI();
-    reserveParamsHistoryItem.liquidityRate = zeroBI();
-    reserveParamsHistoryItem.totalLiquidity = zeroBI();
-    reserveParamsHistoryItem.accruedToTreasury = zeroBI();
-    reserveParamsHistoryItem.totalATokenSupply = zeroBI();
-    reserveParamsHistoryItem.availableLiquidity = zeroBI();
-    reserveParamsHistoryItem.totalLiquidityAsCollateral = zeroBI();
-    reserveParamsHistoryItem.priceInEth = zeroBI();
-    reserveParamsHistoryItem.priceInUsd = zeroBD();
-    reserveParamsHistoryItem.reserve = reserve.id;
-    reserveParamsHistoryItem.totalScaledVariableDebt = zeroBI();
-    reserveParamsHistoryItem.totalCurrentVariableDebt = zeroBI();
-    reserveParamsHistoryItem.totalPrincipalStableDebt = zeroBI();
-    reserveParamsHistoryItem.lifetimePrincipalStableDebt = zeroBI();
-    reserveParamsHistoryItem.lifetimeScaledVariableDebt = zeroBI();
-    reserveParamsHistoryItem.lifetimeCurrentVariableDebt = zeroBI();
-    reserveParamsHistoryItem.lifetimeLiquidity = zeroBI();
-    reserveParamsHistoryItem.lifetimeBorrows = zeroBI();
-    reserveParamsHistoryItem.lifetimeRepayments = zeroBI();
-    reserveParamsHistoryItem.lifetimeWithdrawals = zeroBI();
-    reserveParamsHistoryItem.lifetimeLiquidated = zeroBI();
-    reserveParamsHistoryItem.lifetimeFlashLoans = zeroBI();
-    reserveParamsHistoryItem.lifetimeFlashLoanPremium = zeroBI();
-    reserveParamsHistoryItem.lifetimeFlashLoanLPPremium = zeroBI();
-    reserveParamsHistoryItem.lifetimeFlashLoanProtocolPremium = zeroBI();
-    reserveParamsHistoryItem.lifetimeReserveFactorAccrued = zeroBI();
-    reserveParamsHistoryItem.lifetimeSuppliersInterestEarned = zeroBI();
-    reserveParamsHistoryItem.lifetimePortalLPFee = zeroBI();
-    reserveParamsHistoryItem.lifetimePortalProtocolFee = zeroBI();
-    // reserveParamsHistoryItem.lifetimeStableDebFeeCollected = zeroBI();
-    // reserveParamsHistoryItem.lifetimeVariableDebtFeeCollected = zeroBI();
-  }
-  return reserveParamsHistoryItem as ReserveParamsHistoryItem;
-}
-
-export function getOrInitReserveConfigurationHistoryItem(
-  id: Bytes,
-  reserve: Reserve
-): ReserveConfigurationHistoryItem {
-  let reserveConfigurationHistoryItem = ReserveConfigurationHistoryItem.load(id.toHexString());
-  if (!reserveConfigurationHistoryItem) {
-    reserveConfigurationHistoryItem = new ReserveConfigurationHistoryItem(id.toHexString());
-    reserveConfigurationHistoryItem.usageAsCollateralEnabled = false;
-    reserveConfigurationHistoryItem.borrowingEnabled = false;
-    reserveConfigurationHistoryItem.stableBorrowRateEnabled = false;
-    reserveConfigurationHistoryItem.isActive = false;
-    reserveConfigurationHistoryItem.reserveInterestRateStrategy = new Bytes(1);
-    reserveConfigurationHistoryItem.baseLTVasCollateral = zeroBI();
-    reserveConfigurationHistoryItem.reserveLiquidationThreshold = zeroBI();
-    reserveConfigurationHistoryItem.reserveLiquidationBonus = zeroBI();
-    reserveConfigurationHistoryItem.reserve = reserve.id;
-  }
-  return reserveConfigurationHistoryItem as ReserveConfigurationHistoryItem;
-}
-
-// @ts-ignore
-export function getOrInitReferrer(id: i32): Referrer {
-  let referrer = Referrer.load(id.toString());
-  if (!referrer) {
-    referrer = new Referrer(id.toString());
-    referrer.save();
-  }
-  return referrer as Referrer;
-}
-
-export function createMapContractToPool(_contractAddress: Bytes, pool: string): void {
-  let contractAddress = _contractAddress.toHexString();
-  let contractToPoolMapping = ContractToPoolMapping.load(contractAddress);
+export function createMapContractToPool(contractAddress: Bytes, poolId: string): void {
+  let contractAddressHex = contractAddress.toHexString();
+  let contractToPoolMapping = ContractToPoolMapping.load(contractAddressHex);
 
   if (contractToPoolMapping) {
-    log.error('contract {} is already registered in the protocol', [contractAddress]);
-    throw new Error(contractAddress + 'is already registered in the protocol');
+    return;
   }
-  contractToPoolMapping = new ContractToPoolMapping(contractAddress);
-  contractToPoolMapping.pool = pool;
+  contractToPoolMapping = new ContractToPoolMapping(contractAddressHex);
+  contractToPoolMapping.pool = poolId;
   contractToPoolMapping.save();
+}
+
+export function getProtocol(): Protocol {
+  let protocolId = '1';
+  let protocol = Protocol.load(protocolId);
+  if (!protocol) {
+    protocol = new Protocol(protocolId);
+    protocol.save();
+  }
+  return protocol as Protocol;
+}
+
+export function getOrInitPool(id: string): Pool {
+  let pool = Pool.load(id);
+  if (!pool) {
+    pool = new Pool(id);
+    pool.protocol = getProtocol().id;
+    pool.active = true;
+    pool.paused = false;
+  }
+  return pool as Pool;
 }
