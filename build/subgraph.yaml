@@ -22,7 +22,7 @@ dataSources:
         - Pool
       abis:
         - name: PoolAddressesProvider
-          file: PoolAddressesProvider/PoolAddressesProvider.json
+          file: PoolAddressesProvider/abis/PoolAddressesProvider.json
       eventHandlers:
         - event: ProxyCreated(indexed bytes32,indexed address,indexed address)
           handler: handleProxyCreated
@@ -41,11 +41,11 @@ templates:
         - Reserve
       abis:
         - name: PoolConfigurator
-          file: PoolConfigurator/PoolConfigurator.json
+          file: PoolConfigurator/abis/PoolConfigurator.json
         - name: IERC20Detailed
-          file: PoolConfigurator/IERC20Detailed.json
+          file: PoolConfigurator/abis/IERC20Detailed.json
         - name: IERC20DetailedBytes
-          file: PoolConfigurator/IERC20DetailedBytes.json
+          file: PoolConfigurator/abis/IERC20DetailedBytes.json
       eventHandlers:
         - event: ReserveInitialized(indexed address,indexed address,address,address,address)
           handler: handleReserveInitialized
@@ -64,7 +64,7 @@ templates:
         - User
       abis:
         - name: VariableDebtToken
-          file: VariableDebtToken/VariableDebtToken.json
+          file: VariableDebtToken/abis/VariableDebtToken.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleVariableDebtMint
@@ -87,7 +87,7 @@ templates:
         - User
       abis:
         - name: StableDebtToken
-          file: StableDebtToken/StableDebtToken.json
+          file: StableDebtToken/abis/StableDebtToken.json
       eventHandlers:
         - event: Mint(indexed address,indexed
             address,uint256,uint256,uint256,uint256,uint256,uint256)
