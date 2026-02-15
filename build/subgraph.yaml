@@ -96,3 +96,25 @@ templates:
           handler: handleStableDebtBurn
         - event: BorrowAllowanceDelegated(indexed address,indexed address,indexed address,uint256)
           handler: handleStableTokenBorrowAllowanceDelegated
+  - kind: ethereum/contract
+    name: AToken
+    network: soneium
+    source:
+      abi: AToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: templates/AToken/AToken.wasm
+      entities:
+        - UserReserve
+      abis:
+        - name: AToken
+          file: AToken/abis/AToken.json
+      eventHandlers:
+        - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleATokenMint
+        - event: Burn(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleATokenBurn
+        - event: BalanceTransfer(indexed address,indexed address,uint256,uint256)
+          handler: handleATokenTransfer

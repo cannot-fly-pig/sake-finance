@@ -2,6 +2,7 @@
 import { IERC20Detailed } from '../../generated/templates/PoolConfigurator/IERC20Detailed';
 import { IERC20DetailedBytes } from '../../generated/templates/PoolConfigurator/IERC20DetailedBytes';
 import {
+  AToken as ATokenContract,
   StableDebtToken as STokenContract,
   VariableDebtToken as VTokenContract,
 } from '../../generated/templates';
@@ -49,7 +50,17 @@ export function handleReserveInitialized(event: ReserveInitialized): void {
 
   reserve.decimals = ERC20ReserveContract.decimals();
 
-  // Create SubToken entities (minimal - no contract calls)
+  // Create AToken template and entity
+  ATokenContract.create(event.params.aToken);
+  createMapContractToPool(event.params.aToken, reserve.pool);
+  let aToken = getOrInitSubToken(event.params.aToken);
+  aToken.underlyingAssetAddress = reserve.underlyingAsset;
+  aToken.underlyingAssetDecimals = reserve.decimals;
+  aToken.pool = reserve.pool;
+  aToken.save();
+
+  // Create VariableDebtToken template and entity
+  VTokenContract.create(event.params.variableDebtToken);
   createMapContractToPool(event.params.variableDebtToken, reserve.pool);
   let vToken = getOrInitSubToken(event.params.variableDebtToken);
   vToken.underlyingAssetAddress = reserve.underlyingAsset;
@@ -57,7 +68,7 @@ export function handleReserveInitialized(event: ReserveInitialized): void {
   vToken.pool = reserve.pool;
   vToken.save();
 
-  // Stable debt token (if exists)
+  // Create StableDebtToken template and entity (if exists)
   if (event.params.stableDebtToken.toHexString() != zeroAddress().toHexString()) {
     STokenContract.create(event.params.stableDebtToken);
     createMapContractToPool(event.params.stableDebtToken, reserve.pool);
@@ -69,10 +80,8 @@ export function handleReserveInitialized(event: ReserveInitialized): void {
     reserve.sToken = sToken.id;
   }
 
-  VTokenContract.create(event.params.variableDebtToken);
-
-  // Minimal reserve state
-  reserve.aToken = event.params.aToken.toHexString();
+  // Set reserve token references
+  reserve.aToken = aToken.id;
   reserve.vToken = vToken.id;
   reserve.isActive = true;
   reserve.isFrozen = false;

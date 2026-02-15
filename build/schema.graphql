@@ -51,12 +51,25 @@ type UserReserve @entity(immutable: false) {
   reserve: Reserve!
   user: User!
 
+  # Collateral tracking (aToken balance = deposited amount)
+  scaledATokenBalance: BigInt!
+  currentATokenBalance: BigInt!
+  usageAsCollateralEnabledOnUser: Boolean!
+
   # Debt tracking (essential for borrowedReservesCount)
   scaledVariableDebt: BigInt!
   currentVariableDebt: BigInt!
   principalStableDebt: BigInt!
   currentStableDebt: BigInt!
   currentTotalDebt: BigInt!
+
+  # Interest rate indexes (needed for calculations)
+  variableBorrowIndex: BigInt!
+  liquidityIndex: BigInt!
+  liquidityRate: BigInt!
+  variableBorrowRate: BigInt!
+  stableBorrowRate: BigInt!
+  stableBorrowLastUpdateTimestamp: Int!
 
   # Minimal metadata
   lastUpdateTimestamp: Int!

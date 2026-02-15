@@ -39,11 +39,26 @@ export function getOrInitUserReserve(
     userReserve.user = user.toHexString();
     userReserve.reserve = reserve.id;
 
+    // Collateral fields
+    userReserve.scaledATokenBalance = zeroBI();
+    userReserve.currentATokenBalance = zeroBI();
+    userReserve.usageAsCollateralEnabledOnUser = false;
+
+    // Debt fields
     userReserve.scaledVariableDebt = zeroBI();
     userReserve.currentVariableDebt = zeroBI();
     userReserve.principalStableDebt = zeroBI();
     userReserve.currentStableDebt = zeroBI();
     userReserve.currentTotalDebt = zeroBI();
+
+    // Interest rate indexes
+    userReserve.variableBorrowIndex = zeroBI();
+    userReserve.liquidityIndex = zeroBI();
+    userReserve.liquidityRate = zeroBI();
+    userReserve.variableBorrowRate = zeroBI();
+    userReserve.stableBorrowRate = zeroBI();
+    userReserve.stableBorrowLastUpdateTimestamp = 0;
+
     userReserve.lastUpdateTimestamp = 0;
 
     // Initialize user if not exists

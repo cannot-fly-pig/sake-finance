@@ -43,6 +43,8 @@ export function handleStableDebtMint(event: STokenMint): void {
     userReserve.currentVariableDebt
   );
 
+  userReserve.stableBorrowRate = event.params.newRate;
+  userReserve.stableBorrowLastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
 }
@@ -59,6 +61,7 @@ export function handleStableDebtBurn(event: STokenBurn): void {
     userReserve.currentVariableDebt
   );
 
+  userReserve.stableBorrowLastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
 

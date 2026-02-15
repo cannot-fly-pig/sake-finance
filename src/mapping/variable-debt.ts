@@ -33,6 +33,7 @@ export function handleVariableDebtBurn(event: VTokenBurn): void {
     userReserve.currentVariableDebt
   );
 
+  userReserve.variableBorrowIndex = index;
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
 
@@ -76,6 +77,7 @@ export function handleVariableDebtMint(event: VTokenMint): void {
     userReserve.currentVariableDebt
   );
 
+  userReserve.variableBorrowIndex = index;
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
 }

@@ -6,16 +6,6 @@ import {
   DataSourceContext,
 } from "@graphprotocol/graph-ts";
 
-export class Pool extends DataSourceTemplate {
-  static create(address: Address): void {
-    DataSourceTemplate.create("Pool", [address.toHex()]);
-  }
-
-  static createWithContext(address: Address, context: DataSourceContext): void {
-    DataSourceTemplate.createWithContext("Pool", [address.toHex()], context);
-  }
-}
-
 export class PoolConfigurator extends DataSourceTemplate {
   static create(address: Address): void {
     DataSourceTemplate.create("PoolConfigurator", [address.toHex()]);
@@ -27,16 +17,6 @@ export class PoolConfigurator extends DataSourceTemplate {
       [address.toHex()],
       context,
     );
-  }
-}
-
-export class AToken extends DataSourceTemplate {
-  static create(address: Address): void {
-    DataSourceTemplate.create("AToken", [address.toHex()]);
-  }
-
-  static createWithContext(address: Address, context: DataSourceContext): void {
-    DataSourceTemplate.createWithContext("AToken", [address.toHex()], context);
   }
 }
 
@@ -65,5 +45,15 @@ export class StableDebtToken extends DataSourceTemplate {
       [address.toHex()],
       context,
     );
+  }
+}
+
+export class AToken extends DataSourceTemplate {
+  static create(address: Address): void {
+    DataSourceTemplate.create("AToken", [address.toHex()]);
+  }
+
+  static createWithContext(address: Address, context: DataSourceContext): void {
+    DataSourceTemplate.createWithContext("AToken", [address.toHex()], context);
   }
 }
