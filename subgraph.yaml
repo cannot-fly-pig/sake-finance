@@ -70,6 +70,8 @@ templates:
       abis:
         - name: VariableDebtToken
           file: ./abis/VariableDebtToken.json
+        - name: Pool
+          file: ./abis/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleVariableDebtMint
@@ -95,6 +97,8 @@ templates:
       abis:
         - name: StableDebtToken
           file: ./abis/StableDebtToken.json
+        - name: Pool
+          file: ./abis/Pool.json
       eventHandlers:
         - event: Mint(indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handleStableDebtMint
