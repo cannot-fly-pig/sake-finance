@@ -68,6 +68,11 @@ type User @entity(immutable: false) {
   # THIS IS THE KEY FIELD FOR THE QUERY
   borrowedReservesCount: Int!
 
+  # Health Factor for liquidation risk
+  # HF < 1.0 means user can be liquidated
+  # Stored as BigInt (scaled by 1e18, so 1.5 = 1500000000000000000)
+  healthFactor: BigInt!
+
   # Relations
   reserves: [UserReserve!]! @derivedFrom(field: "user")
 }

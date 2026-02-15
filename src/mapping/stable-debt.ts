@@ -6,14 +6,16 @@ import {
 import {
   UserReserve,
   StableTokenDelegatedAllowance,
+  Pool,
 } from '../../generated/schema';
 import {
   getOrInitUserReserve,
   getOrInitSubToken,
   getOrInitUser,
+  updateUserHealthFactor,
 } from '../helpers/initializers';
 import { zeroBI } from '../utils/converters';
-import { Address } from '@graphprotocol/graph-ts';
+import { Address, Bytes } from '@graphprotocol/graph-ts';
 
 // Lightweight version: Only track borrowedReservesCount
 export function handleStableDebtMint(event: STokenMint): void {
@@ -45,6 +47,12 @@ export function handleStableDebtMint(event: STokenMint): void {
 
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
+
+  // Update health factor
+  let pool = Pool.load(userReserve.pool);
+  if (pool && pool.pool) {
+    updateUserHealthFactor(from, Address.fromBytes(pool.pool as Bytes));
+  }
 }
 
 export function handleStableDebtBurn(event: STokenBurn): void {
@@ -70,6 +78,12 @@ export function handleStableDebtBurn(event: STokenBurn): void {
   ) {
     user.borrowedReservesCount -= 1;
     user.save();
+  }
+
+  // Update health factor
+  let pool = Pool.load(userReserve.pool);
+  if (pool && pool.pool) {
+    updateUserHealthFactor(event.params.from, Address.fromBytes(pool.pool as Bytes));
   }
 }
 

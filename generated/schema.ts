@@ -9,7 +9,6 @@ import {
   Bytes,
   BigInt,
   BigDecimal,
-  Int8,
 } from "@graphprotocol/graph-ts";
 
 export class Protocol extends Entity {
@@ -687,6 +686,19 @@ export class User extends Entity {
 
   set borrowedReservesCount(value: i32) {
     this.set("borrowedReservesCount", Value.fromI32(value));
+  }
+
+  get healthFactor(): BigInt {
+    let value = this.get("healthFactor");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set healthFactor(value: BigInt) {
+    this.set("healthFactor", Value.fromBigInt(value));
   }
 
   get reserves(): UserReserveLoader {

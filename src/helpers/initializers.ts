@@ -1,4 +1,4 @@
-import { Address, Bytes, ethereum } from '@graphprotocol/graph-ts';
+import { Address, Bytes, ethereum, log } from '@graphprotocol/graph-ts';
 import {
   ContractToPoolMapping,
   Pool,
@@ -8,6 +8,7 @@ import {
   User,
   UserReserve,
 } from '../../generated/schema';
+import { Pool as PoolContract } from '../../generated/templates/Pool/Pool';
 import { zeroAddress, zeroBI } from '../utils/converters';
 
 // Lightweight version: Minimal initialization functions only
@@ -18,6 +19,9 @@ export function getOrInitUser(address: Address): User {
   if (!user) {
     user = new User(addressHex);
     user.borrowedReservesCount = 0;
+    // Initialize with max healthFactor (type(uint256).max)
+    // This represents "no debt" / "infinite health"
+    user.healthFactor = zeroBI(); // Will be updated on first position change
     user.save();
   }
   return user as User;
@@ -125,4 +129,20 @@ export function getOrInitPool(id: string): Pool {
     pool.paused = false;
   }
   return pool as Pool;
+}
+
+export function updateUserHealthFactor(userAddress: Address, poolAddress: Address): void {
+  let user = getOrInitUser(userAddress);
+
+  // Call Pool.getUserAccountData() to get health factor
+  let poolContract = PoolContract.bind(poolAddress);
+  let accountData = poolContract.try_getUserAccountData(userAddress);
+
+  if (!accountData.reverted) {
+    // getUserAccountData returns: (totalCollateralBase, totalDebtBase, availableBorrowsBase, currentLiquidationThreshold, ltv, healthFactor)
+    user.healthFactor = accountData.value.value5; // healthFactor is the 6th return value (index 5)
+    user.save();
+  } else {
+    log.warning('Failed to get health factor for user: {}', [userAddress.toHexString()]);
+  }
 }

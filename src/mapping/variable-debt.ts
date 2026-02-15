@@ -11,10 +11,12 @@ import {
   getOrInitUserReserve,
   getOrInitSubToken,
   getOrInitUser,
+  updateUserHealthFactor,
 } from '../helpers/initializers';
+import { Pool } from '../../generated/schema';
 import { zeroBI } from '../utils/converters';
 import { rayDiv, rayMul } from '../helpers/math';
-import { Address } from '@graphprotocol/graph-ts';
+import { Address, Bytes } from '@graphprotocol/graph-ts';
 
 // Lightweight version: Only track borrowedReservesCount
 export function handleVariableDebtBurn(event: VTokenBurn): void {
@@ -44,6 +46,12 @@ export function handleVariableDebtBurn(event: VTokenBurn): void {
   ) {
     user.borrowedReservesCount -= 1;
     user.save();
+  }
+
+  // Update health factor
+  let pool = Pool.load(userReserve.pool);
+  if (pool && pool.pool) {
+    updateUserHealthFactor(from, Address.fromBytes(pool.pool as Bytes));
   }
 }
 
@@ -78,6 +86,12 @@ export function handleVariableDebtMint(event: VTokenMint): void {
 
   userReserve.lastUpdateTimestamp = event.block.timestamp.toI32();
   userReserve.save();
+
+  // Update health factor
+  let pool = Pool.load(userReserve.pool);
+  if (pool && pool.pool) {
+    updateUserHealthFactor(from, Address.fromBytes(pool.pool as Bytes));
+  }
 }
 
 export function handleVariableTokenBorrowAllowanceDelegated(
