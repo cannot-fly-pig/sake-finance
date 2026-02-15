@@ -1,5 +1,5 @@
 specVersion: 1.0.0
-description: Sake Finance - Lightweight Borrowed Users Tracker (Astar Pool)
+description: Sake Finance - Lightweight Borrowed Users Tracker (Astar Pool on Soneium)
 repository: https://github.com/cannot-fly-pig/sake-finance
 schema:
   file: schema.graphql
@@ -8,7 +8,7 @@ indexerHints:
 dataSources:
   - kind: ethereum/contract
     name: PoolAddressesProvider
-    network: astar
+    network: soneium
     source:
       address: "0x1a6c44EdDA729a7a9EE0eE3EAB24e4AC31503E77"
       abi: PoolAddressesProvider
@@ -29,7 +29,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: PoolConfigurator
-    network: astar
+    network: soneium
     source:
       abi: PoolConfigurator
     mapping:
@@ -51,7 +51,7 @@ templates:
           handler: handleReserveInitialized
   - kind: ethereum/contract
     name: VariableDebtToken
-    network: astar
+    network: soneium
     source:
       abi: VariableDebtToken
     mapping:
@@ -74,7 +74,7 @@ templates:
           handler: handleVariableTokenBorrowAllowanceDelegated
   - kind: ethereum/contract
     name: StableDebtToken
-    network: astar
+    network: soneium
     source:
       abi: StableDebtToken
     mapping:
